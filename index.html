@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+  
+    <style>
+        li{
+            border:1px solid black;
+        }
+        ol{
+            border:1px solid red;
+        }
+    </style>
+</head>
+<body>
+    <p id="myp">
+
+    </p>
+    <div class="add">
+        <form >
+            <input type="text" name="input-add" placeholder="add new work here"  >
+            <input type="submit" value="add ">
+        </form>
+    </div>
+    
+        <div class="jobs">
+            <div class="filter">
+                <button class="btn1">show all</button>
+                <button class="btn2"> active</button>
+                <button class="btn3"> completed</button>
+            </div>
+            <ol>                
+            </ol>
+        </div>
+   
+
+    <script>
+
+
+    let list=document.querySelector('ol');
+    let addText=document.querySelector('.add form').children[0];
+    let addButton=document.querySelector('.add form').children[1];
+    let allJob=[];
+    let activeJob=[];
+    let completedJob=[];
+    let showAllBtn=document.querySelector('.btn1')                   
+    let activeBtn=document.querySelector('.btn2')
+    let completedBtn=document.querySelector('.btn3')
+   
+  
+ // show job list when load webpage:
+
+        switch (localStorage.keyShowJob){           
+            case 'active':
+                drawActiveJob();
+                break;
+            case 'completed':
+                drawCompletedJob(); 
+                break;           
+            default:              
+            drawAllJob()     
+        }      
+               
+ 
+//function for add job 
+    function setJob(){
+        if(addText.value!=''){
+            let element=`<li><input type="checkbox" name="checkbox" ><span>${addText.value}</span></li>`
+            if(!localStorage.keyActiveJob){
+                localStorage.setItem('keyActiveJob',element);
+                localStorage.setItem('keyShowJob','all')        
+            }else{
+                localStorage.setItem('keyActiveJob',element+','+localStorage.keyActiveJob); 
+            }            
+            addText.valure=''
+        }
+    }
+   
+// function for addeventlisener "click" method to the "add" button 
+        addButton.addEventListener('click',setJob);
+    
+//function for get active job:
+        function getActiveJob(){  
+            if(localStorage.keyActiveJob)    
+                return  activeJob=localStorage.keyActiveJob.split(',')
+           }  
+//function for get completed job:
+        function getCompletedJob(){ 
+            if(localStorage.keyCompletedJob)    
+                return  completedJob=localStorage.keyCompletedJob.split(',')
+           }  
+
+
+//function for get all job
+         function getAllJob(){
+                getActiveJob();
+                getCompletedJob();
+                allJob=[];
+                allJob=activeJob.concat(completedJob);
+                return allJob;
+            }
+
+//function for show only active job
+        function drawActiveJob(){
+             list.innerHTML='';
+             getActiveJob();      
+             activeJob.forEach(element=>{
+             list.insertAdjacentHTML('beforeend',element)
+              })  
+             localStorage.setItem('keyShowJob','active')        
+            } 
+                
+            activeBtn.addEventListener('click',drawActiveJob)
+
+//function for show only completed job
+
+        function drawCompletedJob(){
+                list.innerHTML='';
+                getCompletedJob();      
+                completedJob.forEach(element=>{
+                    list.insertAdjacentHTML('beforeend',element)
+                })  
+                localStorage.setItem('keyShowJob','completed')        
+            } 
+            
+            completedBtn.addEventListener('click',drawCompletedJob)            
+
+
+// function for show all job
+        function drawAllJob(){
+                getAllJob();
+                list.innerHTML=''
+                    allJob.forEach(element=>{
+                        list.insertAdjacentHTML('beforeend',element)
+                    })                  
+                    localStorage.setItem('keyShowJob','all')
+         }
+        showAllBtn.addEventListener('click',drawAllJob)     
+                
+    
+//function for checkbox check and uncheck 
+
+    list.addEventListener('click',(element)=>{         
+        let checkbox=element.target; 
+        if(localStorage.keyShowJob =="active"){                    
+            if(checkbox.nodeName!='INPUT'){
+                return
+            }else if(checkbox.checked){
+                    getActiveJob()
+                    console.log(activeJob.length)
+                    for(let i=0;i<activeJob.length;i++){
+                    if(list.children[i]==checkbox.parentNode){                                                                                                
+                        let content=checkbox.parentNode.children[1].textContent; 
+                        getCompletedJob()  ;
+                        completedJob.unshift(`<li><input type="checkbox" name="checkbox" checked ><span > <del> ${content}</del> </span></li>`)                       
+                        localStorage.setItem('keyCompletedJob',completedJob)
+                        activeJob.splice(i,1);
+                        localStorage.setItem('keyActiveJob',activeJob)                      
+                                             
+                    }
+                }
+                setTimeout(drawActiveJob,250)     
+            }
+        }else if(localStorage.keyShowJob =="completed") { 
+                    
+            if(checkbox.nodeName!='INPUT'){
+                return
+            }else if(!checkbox.checked){
+                getCompletedJob()
+                for( let i=0; i<completedJob.length;i++){
+                    if(list.children[i]==checkbox.parentNode){
+                        let content=checkbox.parentNode.children[1].innerText;                
+                        getActiveJob();
+                        activeJob.unshift(`<li><input type="checkbox" name="checkbox"><span >${content}</span></li>`);
+                        localStorage.setItem('keyActiveJob',activeJob)
+                        completedJob.splice(i,1);
+                        localStorage.setItem('keyCompletedJob',completedJob);                                        
+                    }
+                }         
+                setTimeout(drawCompletedJob,250)
+            }
+        }else{
+            if(checkbox.nodeName!='INPUT'){
+                return
+            }else if(checkbox.checked){
+                getActiveJob()              
+                for(let i=0;i<activeJob.length;i++){
+                    if(list.children[i]==checkbox.parentNode){                                                                                                
+                        let content=checkbox.parentNode.children[1].textContent; 
+                        getCompletedJob()  ;
+                        completedJob.unshift(`<li><input type="checkbox" name="checkbox" checked ><span > <del> ${content}</del> </span></li>`)                       
+                        localStorage.setItem('keyCompletedJob',completedJob)
+                        activeJob.splice(i,1);
+                        localStorage.setItem('keyActiveJob',activeJob)}
+                    }
+                    setTimeout(drawAllJob,250);
+            }else if(!checkbox.checked){
+                getActiveJob() 
+                getCompletedJob()
+                getAllJob()
+                for( let i=(allJob.length-completedJob.length); i<allJob.length;i++){
+                    if(list.children[i]==checkbox.parentNode){
+                        let content=checkbox.parentNode.children[1].innerText;                
+                        completedJob.splice(i-activeJob.length,1);
+                        localStorage.setItem('keyCompletedJob',completedJob);                                        
+                        activeJob.unshift(`<li><input type="checkbox" name="checkbox"><span >${content}</span></li>`);
+                        localStorage.setItem('keyActiveJob',activeJob)
+                    }
+                }  
+                setTimeout(drawAllJob,250);
+                    
+                
+                     
+                                    
+            }
+        }       
+    })
+       console.log(list.children[0])              
+        
+ </script>
+          
+</body>
+</html>
+
+
+           
+
+
+
+
+       
+                         
+
+    
+
